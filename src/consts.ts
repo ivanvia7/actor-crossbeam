@@ -10,9 +10,9 @@ export const labels = {
     PROFILE: "PROFILE",
 };
 
-if (!process.env.USER_NAME || !process.env.PWD) {
-    throw new Error("Missing environment variables for USER_NAME or PWD.");
+if (!process.env.USER_NAME || !process.env.USER_PWD) {
+    throw new Error("Missing environment variables for USER_NAME or USER_PWD.");
 }
 
 export const USER_EMAIL: string = process.env.USER_NAME;
-export const PWD: string = process.env.PWD;
+export const USER_PWD: string = process.env.USER_PWD;

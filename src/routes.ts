@@ -1,5 +1,5 @@
 import { Dataset, createPlaywrightRouter } from "crawlee";
-import { BASE_URL, labels, USER_EMAIL, PWD } from "./consts.js";
+import { BASE_URL, labels, USER_EMAIL, USER_PWD } from "./consts.js";
 
 export const router = createPlaywrightRouter();
 
@@ -7,9 +7,10 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
     log.info("Going to login page");
 
     await page.getByPlaceholder("Email Address").fill(USER_EMAIL);
-    await page.getByPlaceholder("Password").fill(PWD);
+    await page.getByPlaceholder("Password").fill(USER_PWD);
+    console.log(USER_PWD);
 
-    const loginButton = await page.getByRole("button", { name: "Log In" });
+    const loginButton = await page.locator('[data-testid="login-button"]');
     await loginButton.click();
 
     await page.waitForURL("https://app.crossbeam.com/dashboard"); // Change URL as needed

@@ -30,7 +30,7 @@ await Actor.init();
 //     (await Actor.getInput<Input>()) ?? ({} as Input);
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
-    groups: ["RESEDENTIAL"],
+    groups: ["RESIDENTIAL"],
     countryCode: "CZ",
 });
 
