@@ -1,14 +1,23 @@
 import { Dataset, createPlaywrightRouter } from "crawlee";
-
-import { BASE_URL, labels } from "./consts.js";
+import { BASE_URL, labels, USER_EMAIL, PWD } from "./consts.js";
 
 export const router = createPlaywrightRouter();
 
-router.addDefaultHandler(async ({ enqueueLinks, log }) => {
-    log.info(`enqueueing new URLs`);
+router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
+    log.info("Going to login page");
+
+    await page.getByPlaceholder("Email Address").fill(USER_EMAIL);
+    await page.getByPlaceholder("Password").fill(PWD);
+
+    const loginButton = await page.getByRole("button", { name: "Log In" });
+    await loginButton.click();
+
+    await page.waitForURL("https://app.crossbeam.com/dashboard"); // Change URL as needed
+
+    log.info(`Enqueueing new URLs`);
     await enqueueLinks({
-        globs: ["https://apify.com/*"],
-        label: "detail",
+        globs: ["https://app.crossbeam.com/records/111601/*"],
+        label: labels.PROFILE,
     });
 });
 

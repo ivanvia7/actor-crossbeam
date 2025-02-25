@@ -14,6 +14,8 @@ import { PlaywrightCrawler } from "crawlee";
 import { router } from "./routes.js";
 
 import { BASE_URL, labels } from "./consts.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 interface Input {
     startUrls: string[];
@@ -24,8 +26,8 @@ interface Input {
 await Actor.init();
 
 // Structure of input is defined in input_schema.json
-const { startUrls = ["https://crawlee.dev"], maxRequestsPerCrawl = 100 } =
-    (await Actor.getInput<Input>()) ?? ({} as Input);
+// const { startUrls = ["https://crawlee.dev"], maxRequestsPerCrawl = 100 } =
+//     (await Actor.getInput<Input>()) ?? ({} as Input);
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
     groups: ["RESEDENTIAL"],
@@ -34,7 +36,6 @@ const proxyConfiguration = await Actor.createProxyConfiguration({
 
 const crawler = new PlaywrightCrawler({
     proxyConfiguration,
-    maxRequestsPerCrawl,
     requestHandler: router,
     launchContext: {
         launchOptions: {
@@ -42,7 +43,7 @@ const crawler = new PlaywrightCrawler({
                 "--disable-gpu", // Mitigates the "crashing GPU process" issue in Docker containers
             ],
             headless: false,
-            slowMo: 250,
+            slowMo: 500,
         },
     },
 });
@@ -50,7 +51,7 @@ const crawler = new PlaywrightCrawler({
 await crawler.run([
     {
         url: BASE_URL,
-        label: labels.LISTING,
+        label: labels.LOGIN,
     },
 ]);
 
