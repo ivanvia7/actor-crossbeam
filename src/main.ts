@@ -47,9 +47,9 @@ const crawler = new PlaywrightCrawler({
                 "--disable-gpu", // Mitigates the "crashing GPU process" issue in Docker containers
                 "--ignore-certificate-errors", // Ignore SSL certificate errors
             ],
-            headless: false,
+            headless: true,
             timeout: 0,
-            slowMo: 1000,
+            slowMo: 800,
         },
     },
 });
