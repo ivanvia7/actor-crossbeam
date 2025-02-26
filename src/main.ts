@@ -38,14 +38,14 @@ const crawler = new PlaywrightCrawler({
     proxyConfiguration,
     requestHandler: router,
     maxRequestRetries: 2,
-    maxConcurrency: 3,
+    maxConcurrency: 2,
     requestHandlerTimeoutSecs: 3600,
     launchContext: {
         launchOptions: {
             args: [
                 "--disable-gpu", // Mitigates the "crashing GPU process" issue in Docker containers
             ],
-            headless: true,
+            headless: false,
             timeout: 0,
         },
     },
