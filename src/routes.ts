@@ -9,7 +9,7 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
 
     await page.getByPlaceholder("Email Address").fill(USER_EMAIL);
     await page.getByPlaceholder("Password").fill(USER_PWD);
-    console.log(USER_PWD);
+    log.info("Filling login form with user credentials.");
 
     const loginButton = await page.locator('[data-testid="login-button"]');
     await loginButton.click();
@@ -35,40 +35,43 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
             ".c-paginator__link.c-paginator__link-right.px-8"
         );
 
-        log.info("Navigating to next page...");
-        await nextButton.click();
+        const isNextPageVisible = await nextButton.isVisible();
+        if (isNextPageVisible) {
+            log.info("Navigating to next page...");
+            await nextButton.click();
 
-        //waiting for header
-        await page.waitForSelector(
-            ".text-m.text-neutral-text-strong.flex.items-center"
-        );
+            //waiting for header
+            await page.waitForSelector(
+                ".text-m.text-neutral-text-strong.flex.items-center"
+            );
 
-        const activePage = await page
-            .locator(".c-paginator__link--active.c-paginator__link")
-            .textContent();
+            const activePage = await page
+                .locator(".c-paginator__link--active.c-paginator__link")
+                .textContent();
 
-        if (
-            activePage &&
-            activePage !== pagesHandled[pagesHandled.length - 1]
-        ) {
-            log.info("Going to the next listing page");
-            pagesHandled.push(activePage);
+            if (
+                activePage &&
+                activePage !== pagesHandled[pagesHandled.length - 1]
+            ) {
+                log.info("Going to the next listing page");
+                pagesHandled.push(activePage);
+            } else {
+                log.info("Handled the last listing page");
+                hasNextPage = false;
+            }
         } else {
-            log.info("Handled the last listing page");
+            log.info("No next page button, ending pagination.");
             hasNextPage = false;
         }
     }
 
     log.info("Login is successful. See the report.");
-
-    log.info(`Enqueueing new URLs`);
-    await enqueueLinks({
-        globs: ["https://app.crossbeam.com/records/111601/*"],
-        label: labels.PROFILE,
-    });
 });
 
 router.addHandler<CompanyProfile>(labels.PROFILE, async ({ page, log }) => {
+    //waiting for the header of the profile page
+    await page.waitForSelector(".c-indiv-record-cards__name");
+
     //Constants for the locators
     const CONTACT_ID_LABEL = "text=Contact ID";
     const COMPANY_ID_LABEL = "text=Primary Associated Company ID";
@@ -83,7 +86,7 @@ router.addHandler<CompanyProfile>(labels.PROFILE, async ({ page, log }) => {
             "xpath=following-sibling::div/span"
         );
 
-        if ((await valueElement.count()) > 0) {
+        if (await valueElement.isVisible()) {
             return await valueElement.innerText();
         }
 
@@ -107,9 +110,6 @@ router.addHandler<CompanyProfile>(labels.PROFILE, async ({ page, log }) => {
         contactWeb: contactWeb || "N/A",
         companyId: companyId || "N/A",
     });
-});
 
-router.addHandler("detail", async ({ request, page, log }) => {
-    const title = await page.title();
-    log.info(`${title}`, { url: request.loadedUrl });
+    await page.waitForTimeout(2000);
 });
