@@ -66,11 +66,6 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
     }
 
     log.info("Login is successful. See the report.");
-
-    await enqueueLinks({
-        globs: ["https://app.crossbeam.com/records/111601/*"],
-        label: labels.PROFILE,
-    });
 });
 
 router.addHandler<CompanyProfile>(labels.PROFILE, async ({ page, log }) => {

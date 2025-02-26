@@ -12,6 +12,7 @@ import { PlaywrightCrawler } from "crawlee";
 // read more about this here: https://nodejs.org/docs/latest-v18.x/api/esm.html#mandatory-file-extensions
 // note that we need to use `.js` even when inside TS files
 import { router } from "./routes.js";
+import { firefox } from "playwright"; // Import Firefox from Playwright
 
 import { BASE_URL, labels } from "./consts.js";
 import dotenv from "dotenv";
@@ -41,9 +42,11 @@ const crawler = new PlaywrightCrawler({
     maxConcurrency: 2,
     requestHandlerTimeoutSecs: 3600,
     launchContext: {
+        launcher: firefox,
         launchOptions: {
             args: [
                 "--disable-gpu", // Mitigates the "crashing GPU process" issue in Docker containers
+                "--ignore-certificate-errors", // Ignore SSL certificate errors
             ],
             headless: false,
             timeout: 0,
