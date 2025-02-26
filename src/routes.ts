@@ -1,4 +1,4 @@
-import { Dataset, createPlaywrightRouter } from "crawlee";
+import { Dataset, RequestQueue, createPlaywrightRouter } from "crawlee";
 import { BASE_URL, labels, USER_EMAIL, USER_PWD } from "./consts.js";
 import { CompanyProfile } from "./types.js";
 
@@ -23,8 +23,6 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
     let pagesHandled: string[] = [];
 
     while (hasNextPage) {
-        log.info("Extracting the profile from the current page");
-
         await enqueueLinks({
             globs: ["https://app.crossbeam.com/records/111601/*"],
             label: labels.PROFILE,
@@ -35,8 +33,7 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
             ".c-paginator__link.c-paginator__link-right.px-8"
         );
 
-        const isNextPageVisible = await nextButton.isVisible();
-        if (isNextPageVisible) {
+        if (nextButton) {
             log.info("Navigating to next page...");
             await nextButton.click();
 
