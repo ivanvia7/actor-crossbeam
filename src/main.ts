@@ -48,6 +48,7 @@ const crawler = new PlaywrightCrawler({
             ],
             headless: true,
             timeout: 0,
+            slowMo: 500,
         },
     },
 });
