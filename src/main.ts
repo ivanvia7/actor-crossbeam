@@ -41,7 +41,6 @@ const crawler = new PlaywrightCrawler({
     maxConcurrency: 1,
     requestHandlerTimeoutSecs: 3600,
     launchContext: {
-        launcher: firefox,
         launchOptions: {
             args: [
                 "--disable-gpu", // Mitigates the "crashing GPU process" issue in Docker containers
