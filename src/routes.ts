@@ -1,12 +1,19 @@
 import { Dataset, RequestQueue, createPlaywrightRouter } from "crawlee";
 import { BASE_URL, labels, USER_EMAIL, USER_PWD } from "./consts.js";
-import { CompanyProfile } from "./types.js";
+import {
+    CompanyProfile,
+    EnqueueLinksOptions,
+    EnqueueLinksFunction,
+} from "./types.js";
+import { executeLogin } from "./utils.js";
 
 export const router = createPlaywrightRouter();
 
 router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
-    log.info("Going to login page");
+    //Login first time
+    log.info("Going to login first time");
 
+    //Login function
     await page.getByPlaceholder("Email Address").fill(USER_EMAIL);
     await page.getByPlaceholder("Password").fill(USER_PWD);
     log.info("Filling login form with user credentials.");
@@ -14,10 +21,13 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
     const loginButton = await page.locator('[data-testid="login-button"]');
     await loginButton.click();
 
+    //waiting for the selector on the report page
     await page.waitForSelector(
         ".text-m.text-neutral-text-strong.flex.items-center",
         { timeout: 60000 }
     );
+
+    log.info("Login is successful. See the report.");
 
     await page.waitForTimeout(2000);
 
@@ -49,30 +59,68 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
                 .locator(".c-paginator__link--active.c-paginator__link")
                 .textContent();
 
-            if (
-                activePage &&
-                activePage !== pagesHandled[pagesHandled.length - 1]
-            ) {
+            if (activePage && activePage !== "3") {
                 log.info("Going to the next listing page");
                 pagesHandled.push(activePage);
             } else {
                 log.info("Handled the last listing page");
                 hasNextPage = false;
+                break;
             }
         } else {
             log.info("No next page button, ending pagination.");
             hasNextPage = false;
+            break;
         }
     }
-
-    log.info("Login is successful. See the report.");
 });
 
 router.addHandler<CompanyProfile>(labels.PROFILE, async ({ page, log }) => {
-    // Waiting for the header of the profile page
-    await page.waitForSelector(".text-lg.font-bold.text-neutral-text-strong", {
-        timeout: 60000,
-    });
+    let pageUrl = page.url();
+
+    try {
+        // Waiting for the header of the profile page
+        await page.waitForSelector(
+            ".text-lg.font-bold.text-neutral-text-strong",
+            {
+                timeout: 25000,
+            }
+        );
+    } catch (error) {
+        console.log("Selector not found. Reloading page...");
+        await page.reload();
+        try {
+            await page.waitForSelector(
+                ".text-lg.font-bold.text-neutral-text-strong",
+                {
+                    timeout: 25000,
+                }
+            );
+        } catch (error) {
+            const loginHeader = await page.locator(
+                ".c-login__user-pass__title"
+            );
+            if (await loginHeader.isVisible()) {
+                await executeLogin(page);
+                await page.goto(pageUrl);
+                try {
+                    await page.waitForSelector(
+                        ".text-lg.font-bold.text-neutral-text-strong",
+                        {
+                            timeout: 25000,
+                        }
+                    );
+                } catch (error) {
+                    console.error("Failed to load profile page after login.");
+                    throw new Error("Failed to load profile page after login.");
+                }
+            } else {
+                console.log("Neither selector was found.");
+                log.info("Failed to load profile page or login.", page.url);
+                return;
+            }
+        }
+    }
 
     // Constants for the locators
     const CONTACT_ID_SELECTOR =

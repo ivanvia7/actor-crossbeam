@@ -31,15 +31,14 @@ await Actor.init();
 //     (await Actor.getInput<Input>()) ?? ({} as Input);
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
-    groups: ["RESIDENTIAL"],
-    countryCode: "CZ",
+    groups: ["CZECH_LUMINATI"],
 });
 
 const crawler = new PlaywrightCrawler({
     proxyConfiguration,
     requestHandler: router,
     maxRequestRetries: 2,
-    maxConcurrency: 2,
+    maxConcurrency: 1,
     requestHandlerTimeoutSecs: 3600,
     launchContext: {
         launcher: firefox,
@@ -50,6 +49,7 @@ const crawler = new PlaywrightCrawler({
             ],
             headless: false,
             timeout: 0,
+            slowMo: 1000,
         },
     },
 });

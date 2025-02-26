@@ -14,3 +14,12 @@ export interface RunStats {
     errors: Record<string, string[]>;
     totalSaved: number;
 }
+
+export interface EnqueueLinksOptions {
+    globs: string[];
+    label: string;
+}
+
+export type EnqueueLinksFunction = (
+    options: EnqueueLinksOptions
+) => Promise<any>;
