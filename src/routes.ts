@@ -15,10 +15,13 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
     await loginButton.click();
 
     await page.waitForSelector(
-        ".text-m.text-neutral-text-strong.flex.items-center"
+        ".text-m.text-neutral-text-strong.flex.items-center",
+        { timeout: 60000 }
     );
 
-    //Initiating the pagination control
+    await page.waitForTimeout(2000);
+
+    // Initiating the pagination control
     let hasNextPage = true;
     let pagesHandled: string[] = [];
 
@@ -63,50 +66,65 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
     }
 
     log.info("Login is successful. See the report.");
+
+    await enqueueLinks({
+        globs: ["https://app.crossbeam.com/records/111601/*"],
+        label: labels.PROFILE,
+    });
 });
 
 router.addHandler<CompanyProfile>(labels.PROFILE, async ({ page, log }) => {
-    //waiting for the header of the profile page
-    await page.waitForSelector(".c-indiv-record-cards__name");
-
-    //Constants for the locators
-    const CONTACT_ID_LABEL = "text=Contact ID";
-    const COMPANY_ID_LABEL = "text=Primary Associated Company ID";
-    const EMAIL_LABEL = "text=Email";
-    const WEB_URL = "text=Website URL";
-    const COMPANY_NAME_LABEL = "text=Crossbeam - Company name";
-
-    //matching the label with the field label in the table
-    async function getFieldValue(labelLocator: string) {
-        const labelElement = await page.locator(labelLocator);
-        const valueElement = labelElement.locator(
-            "xpath=following-sibling::div/span"
-        );
-
-        if (await valueElement.isVisible()) {
-            return await valueElement.innerText();
-        }
-
-        log.info("Cannot find the information for labelLocator", {
-            labelLocator,
-        });
-
-        return null;
-    }
-
-    const contactId = await getFieldValue(CONTACT_ID_LABEL);
-    const email = await getFieldValue(EMAIL_LABEL);
-    const company_name = await getFieldValue(COMPANY_NAME_LABEL);
-    const contactWeb = await getFieldValue(WEB_URL);
-    const companyId = await getFieldValue(COMPANY_ID_LABEL);
-
-    await Dataset.pushData({
-        contactId: contactId || "N/A",
-        email: email || "N/A",
-        company_name: company_name || "N/A",
-        contactWeb: contactWeb || "N/A",
-        companyId: companyId || "N/A",
+    // Waiting for the header of the profile page
+    await page.waitForSelector(".text-lg.font-bold.text-neutral-text-strong", {
+        timeout: 60000,
     });
 
-    await page.waitForTimeout(2000);
+    // Constants for the locators
+    const CONTACT_ID_SELECTOR =
+        'div.c-card-records__org__field__label:has-text("Contact ID") + div.c-card-records__org__field__value span';
+    const COMPANY_ID_SELECTOR =
+        'div.c-card-records__org__field__label:has-text("Primary Associated Company ID") + div.c-card-records__org__field__value span';
+    const EMAIL_SELECTOR =
+        'div.c-card-records__org__field__label:has-text("Email") + div.c-card-records__org__field__value span';
+    const WEB_SELECTOR =
+        'div.c-card-records__org__field__label:has-text("Website URL") + div.c-card-records__org__field__value span';
+    const SUBSCRIPTION_PLAN_SELECTOR =
+        'div.c-card-records__org__field__label:has-text("Crossbeam - Subscription plan") + div.c-card-records__org__field__value span';
+    const COMPANY_NAME_SELECTOR =
+        'div.c-card-records__org__field__label:has-text("Crossbeam - Company name") + div.c-card-records__org__field__value span';
+
+    // Function to safely extract inner text, return "N/A" if not found
+    async function getText(selector: string) {
+        try {
+            const text = await page.locator(selector).first().innerText();
+            return text || "N/A";
+        } catch (error) {
+            console.error(
+                `Error fetching data for selector: ${selector}`,
+                error
+            );
+            return "N/A";
+        }
+    }
+
+    // Extracting values using the getText function
+    const contactId = await getText(CONTACT_ID_SELECTOR);
+    const companyId = await getText(COMPANY_ID_SELECTOR);
+    const email = await getText(EMAIL_SELECTOR);
+    const subscriptionPlan = await getText(SUBSCRIPTION_PLAN_SELECTOR);
+    const companyName = await getText(COMPANY_NAME_SELECTOR);
+    const contactWeb = await getText(WEB_SELECTOR);
+
+    await Dataset.pushData({
+        contactId,
+        email,
+        company_name: companyName,
+        contactWeb,
+        companyId,
+        subscriptionPlan,
+    });
+
+    log.info("Just finished with:", { companyName });
+
+    await page.waitForTimeout(3000);
 });
