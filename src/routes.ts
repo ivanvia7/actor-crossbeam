@@ -59,7 +59,10 @@ router.addHandler(labels.LOGIN, async ({ enqueueLinks, page, log }) => {
                 .locator(".c-paginator__link--active.c-paginator__link")
                 .textContent();
 
-            if (activePage && activePage !== "3") {
+            if (
+                activePage &&
+                activePage !== pagesHandled[pagesHandled.length - 1]
+            ) {
                 log.info("Going to the next listing page");
                 pagesHandled.push(activePage);
             } else {
