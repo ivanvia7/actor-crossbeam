@@ -11,10 +11,8 @@ export async function executeLogin(page: any) {
     await page.waitForTimeout(2000);
 
     const loginButton = await page.locator('[data-testid="login-button"]');
-    await page.waitForTimeout(2000);
-
     await loginButton.click();
-    await page.waitForTimeout(10000);
+    await page.waitForTimeout(15000);
 
     console.log("Logged in successfully.");
 }
